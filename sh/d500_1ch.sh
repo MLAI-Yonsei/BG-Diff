@@ -1,6 +1,0 @@
-CUDA_VISIBLE_DEVICES=0 python main.py --ignore_wandb --channels 1 --disable_guidance --seq_length 32660 --benchmark d500 --train_num_steps 3000 --diffusion_time_steps 2000 --d500_idx 1 &
-CUDA_VISIBLE_DEVICES=1 python main.py --ignore_wandb --channels 1 --disable_guidance --seq_length 32660 --benchmark d500 --train_num_steps 3000 --diffusion_time_steps 2000 --d500_idx 2 &
-CUDA_VISIBLE_DEVICES=2 python main.py --ignore_wandb --channels 1 --disable_guidance --seq_length 32660 --benchmark d500 --train_num_steps 3000 --diffusion_time_steps 2000 --d500_idx 3 &
-CUDA_VISIBLE_DEVICES=3 python main.py --ignore_wandb --channels 1 --disable_guidance --seq_length 32660 --benchmark d500 --train_num_steps 3000 --diffusion_time_steps 2000 --d500_idx 4 &
-CUDA_VISIBLE_DEVICES=4 python main.py --ignore_wandb --channels 1 --disable_guidance --seq_length 32660 --benchmark d500 --train_num_steps 3000 --diffusion_time_steps 2000 --d500_idx 5 &
-CUDA_VISIBLE_DEVICES=5 python main.py --ignore_wandb --channels 1 --disable_guidance --seq_length 32660 --benchmark d500 --train_num_steps 3000 --diffusion_time_steps 2000 --d500_idx 6 &
