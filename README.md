@@ -1,334 +1,74 @@
-<img src="./images/denoising-diffusion.png" width="500px"></img>
+# Few-Shot PPG Signal Generation via Guided Diffusion Models
 
-## Denoising Diffusion Probabilistic Model, in Pytorch
+This is the official pytorch implementation of the paper ["Few-Shot PPG Signal Generation via Guided Diffusion Models"](https://ieeexplore.ieee.org/document/10680298), Kang et al.
 
-Implementation of <a href="https://arxiv.org/abs/2006.11239">Denoising Diffusion Probabilistic Model</a> in Pytorch. It is a new approach to generative modeling that may <a href="https://ajolicoeur.wordpress.com/the-new-contender-to-gans-score-matching-with-langevin-sampling/">have the potential</a> to rival GANs. It uses denoising score matching to estimate the gradient of the data distribution, followed by Langevin sampling to sample from the true distribution.
+## Quick Summary
 
-This implementation was transcribed from the official Tensorflow version <a href="https://github.com/hojonathanho/diffusion">here</a>
+![image](https://github.com/user-attachments/assets/a5f33682-04f3-4c07-a1b5-a2d593cd1914)
+Can guide biased generation via diffusion models in unbalanced datasets to force generation for minority groups.
 
-Youtube AI Educators - <a href="https://www.youtube.com/watch?v=W-O7AZNzbzQ">Yannic Kilcher</a> | <a href="https://www.youtube.com/watch?v=344w5h24-h8">AI Coffeebreak with Letitia</a> | <a href="https://www.youtube.com/watch?v=HoKDTa5jHvg">Outlier</a>
+![OevrallFramework](https://github.com/user-attachments/assets/dac35b7c-00ba-4050-b8cf-3a501ae2b85f)
+However, minority groups cannot create validity easily because of the group attribute. Therefore, Bi-guidance, continuous and deterministic guidance, guiding to the target group, and applying data enhancement generate plausible data.
 
-<a href="https://github.com/yiyixuxu/denoising-diffusion-flax">Flax implementation</a> from <a href="https://github.com/yiyixuxu">YiYi Xu</a>
+![image](https://github.com/user-attachments/assets/a754732f-798b-4cc6-9248-4fa5bb720b84)
+It can generate data covering the distribution of unseen real data, even though it was trained and generated in a few-shot setting.
 
-<a href="https://huggingface.co/blog/annotated-diffusion">Annotated code</a> by Research Scientists / Engineers from <a href="https://huggingface.co/">🤗 Huggingface</a>
 
-Update: Turns out none of the technicalities really matters at all | <a href="https://arxiv.org/abs/2208.09392">"Cold Diffusion" paper</a> | <a href="https://muse-model.github.io/">Muse</a>
+## Abstract
+Recent advancements in deep learning for predicting Arterial Blood Pressure (ABP) have prominently featured photoplethysmography (PPG) signals. Notably, PPG signals exhibit significant variability due to differences in measurement environments, alongside stark disparities in the distribution of collected signal data among different labels. To address these challenges, this study introduces a Bi-Guided Diffusion Model designed to generate PPG signals with expected features of ABP within a few-shot setting for each label group. We propose a guided diffusion model architecture that simultaneously considers both the determinant group condition and the continuous label condition for each group in a few-shot setting. To our knowledge, this is the first study to use a diffusion model for generating PPG signals with a limited dataset. Initially, we categorized them into four groups based on SBP and DBP values: Hypo, Normal, Prehyper, and Hyper2. In each group, we sample an equal number of data points according to the few-shot setting and then generate appropriate PPG signals for each group through guidance.
+Additionally, Our study proposes a post-processing technique to address the limitations of generative models in few-shot settings, consistently boosting performance across various methods such as training from scratch, transfer learning, and linear probing. When benchmarked, our methodology demonstrated performance improvements across all datasets, including BCG, PPGBP, and SENSORS. We confirmed data quality by comparing training, generated, and actual data. We analyzed error cases, morphology features, and t-SNE distribution to highlight the role of synthetic data in enhancing performance.
 
-<img src="./images/sample.png" width="500px"><img>
 
-[![PyPI version](https://badge.fury.io/py/denoising-diffusion-pytorch.svg)](https://badge.fury.io/py/denoising-diffusion-pytorch)
+## Model and Data Directory
 
-## Install
+- Data
 
-```bash
-$ pip install denoising_diffusion_pytorch
+    ```
+    ├── bp-algorithm
+    ├── datasets
+    │   ├── splits
+    │   │   ├── bcg_dataset
+    │   │   │   ├── feat_fold_0.csv
+    │   │   │   ├── feat_fold_1.csv
+    │   │   │   ├── feat_fold_2.csv
+    │   │   │   ├── feat_fold_3.csv
+    │   │   │   ├── feat_fold_4.csv
+
+    ```
+
+
+## Explanation of the arguments and Example
+### Key Arguments:
+
+- `--seed`: Random seed for reproducibility (default: `1000`).
+- `--num_samples`: Number of samples to process (default: `5`).
+- `--seq_length`: Sequence length for the data (default: `625`).
+- `--train_batch_size`: Batch size during training (default: `32`).
+- `--benchmark`: Dataset or benchmark to use (e.g., `bcg`) (default: `'bcg'`).
+
+### Training Options:
+
+- `--diffusion_time_steps`: Number of diffusion time steps (default: `2000`).
+- `--train_num_steps`: Number of training steps (default: `32`).
+- `--train_lr`: Learning rate for training (default: `8e-5`).
+
+### Sampling Options:
+
+- `--sample_only`: Skip training and only run sampling (default: `False`).
+- `--sample_batch_size`: Batch size for sampling (if needed).
+- `--target_group`: Target group for sampling (`-1`: all, `0`: hyp0, `1`: normal, `2`: perhyper, `3`: hyper2, `4`: crisis) (default: `-1`).
+- `--regressor_scale`: Scaling factor for regressor (default: `1.0`).
+
+### Code Example
 ```
+conda env create -f environment.yml
 
-## Usage
-
-```python
-import torch
-from denoising_diffusion_pytorch import Unet, GaussianDiffusion
-
-model = Unet(
-    dim = 64,
-    dim_mults = (1, 2, 4, 8),
-    flash_attn = True
-)
-
-diffusion = GaussianDiffusion(
-    model,
-    image_size = 128,
-    timesteps = 1000    # number of steps
-)
-
-training_images = torch.rand(8, 3, 128, 128) # images are normalized from 0 to 1
-loss = diffusion(training_images)
-loss.backward()
-
-# after a lot of training
-
-sampled_images = diffusion.sample(batch_size = 4)
-sampled_images.shape # (4, 3, 128, 128)
-```
-
-Or, if you simply want to pass in a folder name and the desired image dimensions, you can use the `Trainer` class to easily train a model.
-
-```python
-from denoising_diffusion_pytorch import Unet, GaussianDiffusion, Trainer
-
-model = Unet(
-    dim = 64,
-    dim_mults = (1, 2, 4, 8),
-    flash_attn = True
-)
-
-diffusion = GaussianDiffusion(
-    model,
-    image_size = 128,
-    timesteps = 1000,           # number of steps
-    sampling_timesteps = 250    # number of sampling timesteps (using ddim for faster inference [see citation for ddim paper])
-)
-
-trainer = Trainer(
-    diffusion,
-    'path/to/your/images',
-    train_batch_size = 32,
-    train_lr = 8e-5,
-    train_num_steps = 700000,         # total training steps
-    gradient_accumulate_every = 2,    # gradient accumulation steps
-    ema_decay = 0.995,                # exponential moving average decay
-    amp = True,                       # turn on mixed precision
-    calculate_fid = True              # whether to calculate fid during training
-)
-
-trainer.train()
-```
-
-Samples and model checkpoints will be logged to `./results` periodically
-
-## Multi-GPU Training
-
-The `Trainer` class is now equipped with <a href="https://huggingface.co/docs/accelerate/accelerator">🤗 Accelerator</a>. You can easily do multi-gpu training in two steps using their `accelerate` CLI
-
-At the project root directory, where the training script is, run
-
-```python
-$ accelerate config
-```
-
-Then, in the same directory
-
-```python
-$ accelerate launch train.py
-```
-
-## Miscellaneous
-
-### 1D Sequence
-
-By popular request, a 1D Unet + Gaussian Diffusion implementation.
-
-```python
-import torch
-from denoising_diffusion_pytorch import Unet1D, GaussianDiffusion1D, Trainer1D, Dataset1D
-
-model = Unet1D(
-    dim = 64,
-    dim_mults = (1, 2, 4, 8),
-    channels = 32
-)
-
-diffusion = GaussianDiffusion1D(
-    model,
-    seq_length = 128,
-    timesteps = 1000,
-    objective = 'pred_v'
-)
-
-training_seq = torch.rand(64, 32, 128) # features are normalized from 0 to 1
-dataset = Dataset1D(training_seq)  # this is just an example, but you can formulate your own Dataset and pass it into the `Trainer1D` below
-
-loss = diffusion(training_seq)
-loss.backward()
-
-# Or using trainer
-
-trainer = Trainer1D(
-    diffusion,
-    dataset = dataset,
-    train_batch_size = 32,
-    train_lr = 8e-5,
-    train_num_steps = 700000,         # total training steps
-    gradient_accumulate_every = 2,    # gradient accumulation steps
-    ema_decay = 0.995,                # exponential moving average decay
-    amp = True,                       # turn on mixed precision
-)
-trainer.train()
-
-# after a lot of training
-
-sampled_seq = diffusion.sample(batch_size = 4)
-sampled_seq.shape # (4, 32, 128)
+# Train and Generate Synthetic PPG for all default options
+python main.py
 
 ```
+To evaluate generated PPG
+please use this [repository](https://github.com/inventec-ai-center/bp-benchmark).
 
-`Trainer1D` does not evaluate the generated samples in any way since the type of data is not known.
 
-You could consider adding a suitable metric to the training loop yourself after doing an editable install of this package
-`pip install -e .`.
 
-## Citations
-
-```bibtex
-@inproceedings{NEURIPS2020_4c5bcfec,
-    author      = {Ho, Jonathan and Jain, Ajay and Abbeel, Pieter},
-    booktitle   = {Advances in Neural Information Processing Systems},
-    editor      = {H. Larochelle and M. Ranzato and R. Hadsell and M.F. Balcan and H. Lin},
-    pages       = {6840--6851},
-    publisher   = {Curran Associates, Inc.},
-    title       = {Denoising Diffusion Probabilistic Models},
-    url         = {https://proceedings.neurips.cc/paper/2020/file/4c5bcfec8584af0d967f1ab10179ca4b-Paper.pdf},
-    volume      = {33},
-    year        = {2020}
-}
-```
-
-```bibtex
-@InProceedings{pmlr-v139-nichol21a,
-    title       = {Improved Denoising Diffusion Probabilistic Models},
-    author      = {Nichol, Alexander Quinn and Dhariwal, Prafulla},
-    booktitle   = {Proceedings of the 38th International Conference on Machine Learning},
-    pages       = {8162--8171},
-    year        = {2021},
-    editor      = {Meila, Marina and Zhang, Tong},
-    volume      = {139},
-    series      = {Proceedings of Machine Learning Research},
-    month       = {18--24 Jul},
-    publisher   = {PMLR},
-    pdf         = {http://proceedings.mlr.press/v139/nichol21a/nichol21a.pdf},
-    url         = {https://proceedings.mlr.press/v139/nichol21a.html},
-}
-```
-
-```bibtex
-@inproceedings{kingma2021on,
-    title       = {On Density Estimation with Diffusion Models},
-    author      = {Diederik P Kingma and Tim Salimans and Ben Poole and Jonathan Ho},
-    booktitle   = {Advances in Neural Information Processing Systems},
-    editor      = {A. Beygelzimer and Y. Dauphin and P. Liang and J. Wortman Vaughan},
-    year        = {2021},
-    url         = {https://openreview.net/forum?id=2LdBqxc1Yv}
-}
-```
-
-```bibtex
-@article{Karras2022ElucidatingTD,
-    title   = {Elucidating the Design Space of Diffusion-Based Generative Models},
-    author  = {Tero Karras and Miika Aittala and Timo Aila and Samuli Laine},
-    journal = {ArXiv},
-    year    = {2022},
-    volume  = {abs/2206.00364}
-}
-```
-
-```bibtex
-@article{Song2021DenoisingDI,
-    title   = {Denoising Diffusion Implicit Models},
-    author  = {Jiaming Song and Chenlin Meng and Stefano Ermon},
-    journal = {ArXiv},
-    year    = {2021},
-    volume  = {abs/2010.02502}
-}
-```
-
-```bibtex
-@misc{chen2022analog,
-    title   = {Analog Bits: Generating Discrete Data using Diffusion Models with Self-Conditioning},
-    author  = {Ting Chen and Ruixiang Zhang and Geoffrey Hinton},
-    year    = {2022},
-    eprint  = {2208.04202},
-    archivePrefix = {arXiv},
-    primaryClass = {cs.CV}
-}
-```
-
-```bibtex
-@article{Salimans2022ProgressiveDF,
-    title   = {Progressive Distillation for Fast Sampling of Diffusion Models},
-    author  = {Tim Salimans and Jonathan Ho},
-    journal = {ArXiv},
-    year    = {2022},
-    volume  = {abs/2202.00512}
-}
-```
-
-```bibtex
-@article{Ho2022ClassifierFreeDG,
-    title   = {Classifier-Free Diffusion Guidance},
-    author  = {Jonathan Ho},
-    journal = {ArXiv},
-    year    = {2022},
-    volume  = {abs/2207.12598}
-}
-```
-
-```bibtex
-@article{Sunkara2022NoMS,
-    title   = {No More Strided Convolutions or Pooling: A New CNN Building Block for Low-Resolution Images and Small Objects},
-    author  = {Raja Sunkara and Tie Luo},
-    journal = {ArXiv},
-    year    = {2022},
-    volume  = {abs/2208.03641}
-}
-```
-
-```bibtex
-@inproceedings{Jabri2022ScalableAC,
-    title   = {Scalable Adaptive Computation for Iterative Generation},
-    author  = {A. Jabri and David J. Fleet and Ting Chen},
-    year    = {2022}
-}
-```
-
-```bibtex
-@article{Cheng2022DPMSolverPlusPlus,
-    title   = {DPM-Solver++: Fast Solver for Guided Sampling of Diffusion Probabilistic Models},
-    author  = {Cheng Lu and Yuhao Zhou and Fan Bao and Jianfei Chen and Chongxuan Li and Jun Zhu},
-    journal = {NeuRips 2022 Oral},
-    year    = {2022},
-    volume  = {abs/2211.01095}
-}
-```
-
-```bibtex
-@inproceedings{Hoogeboom2023simpleDE,
-    title   = {simple diffusion: End-to-end diffusion for high resolution images},
-    author  = {Emiel Hoogeboom and Jonathan Heek and Tim Salimans},
-    year    = {2023}
-}
-```
-
-```bibtex
-@misc{https://doi.org/10.48550/arxiv.2302.01327,
-    doi     = {10.48550/ARXIV.2302.01327},
-    url     = {https://arxiv.org/abs/2302.01327},
-    author  = {Kumar, Manoj and Dehghani, Mostafa and Houlsby, Neil},
-    title   = {Dual PatchNorm},
-    publisher = {arXiv},
-    year    = {2023},
-    copyright = {Creative Commons Attribution 4.0 International}
-}
-```
-
-```bibtex
-@inproceedings{Hang2023EfficientDT,
-    title   = {Efficient Diffusion Training via Min-SNR Weighting Strategy},
-    author  = {Tiankai Hang and Shuyang Gu and Chen Li and Jianmin Bao and Dong Chen and Han Hu and Xin Geng and Baining Guo},
-    year    = {2023}
-}
-```
-
-```bibtex
-@misc{Guttenberg2023,
-    author  = {Nicholas Guttenberg},
-    url     = {https://www.crosslabs.org/blog/diffusion-with-offset-noise}
-}
-```
-
-```bibtex
-@inproceedings{Lin2023CommonDN,
-    title   = {Common Diffusion Noise Schedules and Sample Steps are Flawed},
-    author  = {Shanchuan Lin and Bingchen Liu and Jiashi Li and Xiao Yang},
-    year    = {2023}
-}
-```
-
-```bibtex
-@inproceedings{dao2022flashattention,
-    title   = {Flash{A}ttention: Fast and Memory-Efficient Exact Attention with {IO}-Awareness},
-    author  = {Dao, Tri and Fu, Daniel Y. and Ermon, Stefano and Rudra, Atri and R{\'e}, Christopher},
-    booktitle = {Advances in Neural Information Processing Systems},
-    year    = {2022}
-}
-```
