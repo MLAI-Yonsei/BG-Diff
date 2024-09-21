@@ -1,0 +1,9 @@
+# CUDA_VISIBLE_DEVICES=0 /mlainas/teang1995/anaconda3/envs/PPG/bin/python reg_resnet.py --train_epochs 2000 --diffusion_time_steps 2000 --T_max 2000 --eta_min 0.001 --train_fold 0 --init_lr 0.001 --weight_decay 0.1 --do_rate 0.8 --loss 'group_average_loss' --disable_g --final_layers 2 --t_scheduling 'train-step'
+
+# CUDA_VISIBLE_DEVICES=0 /mlainas/teang1995/anaconda3/envs/PPG/bin/python reg_resnet.py --train_epochs 2000 --diffusion_time_steps 2000 --T_max 2000 --eta_min 0.001 --train_fold 1 --init_lr 0.00001 --weight_decay 0.1 --do_rate 0.6 --loss 'group_average_loss' --disable_g --final_layers 2 --t_scheduling 'train-step' --auxilary_classification
+
+# CUDA_VISIBLE_DEVICES=0 /mlainas/teang1995/anaconda3/envs/PPG/bin/python reg_resnet.py --train_epochs 2000 --diffusion_time_steps 2000 --T_max 2000 --eta_min 0.001 --train_fold 2 --init_lr 0.001 --weight_decay 0.01 --do_rate 0.6 --loss 'ERM' --disable_g --final_layers 2 --t_scheduling 'train-step'
+
+# CUDA_VISIBLE_DEVICES=0 /mlainas/teang1995/anaconda3/envs/PPG/bin/python reg_resnet.py --train_epochs 2000 --diffusion_time_steps 2000 --T_max 2000 --eta_min 0.001 --train_fold 3 --init_lr 0.00001 --weight_decay 0.01 --do_rate 0.8 --loss 'group_average_loss' --disable_g --final_layers 2 --t_scheduling 'train-step' --is_se --auxilary_classification
+
+CUDA_VISIBLE_DEVICES=0 /mlainas/teang1995/anaconda3/envs/PPG/bin/python reg_resnet.py --train_epochs 2000 --diffusion_time_steps 2000 --T_max 2000 --eta_min 0.001 --train_fold 4 --init_lr 0.0001 --weight_decay 0.1 --do_rate 0.7 --loss 'ERM' --disable_g --final_layers 3 --t_scheduling 'train-step' --auxilary_classification
