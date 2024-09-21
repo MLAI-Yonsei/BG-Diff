@@ -21,20 +21,6 @@ Additionally, Our study proposes a post-processing technique to address the limi
 
 ## Model and Data Directory
 
-- Model code example
-    - code\train\core\load_model.py
-
-    ```
-    import os
-    root = '/path/to/model'
-    join = os.path.join
-    model_fold = {"bcg": {0: {0: join(root, 'bcg-resnet1d/fold0.ckpt'),
-                        {1: join(root, 'bcg-resnet1d/fold1.ckpt'),
-                        {2: join(root, 'bcg-resnet1d/fold2.ckpt'),
-                        {3: join(root, 'bcg-resnet1d/fold3.ckpt'),
-                        {4: join(root, 'bcg-resnet1d/fold4.ckpt')}}}
-
-    ```
 - Data
 
     ```
