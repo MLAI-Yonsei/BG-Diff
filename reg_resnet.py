@@ -45,9 +45,9 @@ def main(args):
     ) 
     
     if args.disable_g :
-        model_path = f"/mlainas/ETRI_2023/reg_model/fold_{args.train_fold}/{args.t_scheduling}_diffuse_{diffuse_time_step}_wd_{args.weight_decay}_do_rate_{args.do_rate}_loss_{args.loss}_eta_{args.eta_min}_lr_{args.init_lr}_{args.final_layers}_final_no_group_label_timelayer_{time_layer}_is_se_{args.is_se}"
+        model_path = f"your_root_path/reg_model/fold_{args.train_fold}/{args.t_scheduling}_diffuse_{diffuse_time_step}_wd_{args.weight_decay}_do_rate_{args.do_rate}_loss_{args.loss}_eta_{args.eta_min}_lr_{args.init_lr}_{args.final_layers}_final_no_group_label_timelayer_{time_layer}_is_se_{args.is_se}"
     else:
-        model_path = f"/mlainas/ETRI_2023/reg_model/fold_{args.train_fold}/{args.t_scheduling}_diffuse_{diffuse_time_step}_wd_{args.weight_decay}_eta_{args.eta_min}_lr_{args.init_lr}_{args.final_layers}_final_g_{args.g_mlp_layers}_layer_g_pos{args.g_pos}_cat_{args.concat_label_mlp}_timelayer_{time_layer}"
+        model_path = f"your_root_path/reg_model/fold_{args.train_fold}/{args.t_scheduling}_diffuse_{diffuse_time_step}_wd_{args.weight_decay}_eta_{args.eta_min}_lr_{args.init_lr}_{args.final_layers}_final_g_{args.g_mlp_layers}_layer_g_pos{args.g_pos}_cat_{args.concat_label_mlp}_timelayer_{time_layer}"
 
     tr_dataset = Dataset1D(data['train']['ppg'], label=data['train']['spdp'], groups=data['train']['group_label'] ,normalize=True)
     val_dataset = Dataset1D(data['valid']['ppg'], label=data['valid']['spdp'], groups=data['valid']['group_label'] ,normalize=True)
@@ -56,11 +56,7 @@ def main(args):
     tr_dl = cycle(tr_dl)
     
     val_dl = DataLoader(val_dataset, batch_size = batch_size, shuffle = False, pin_memory = True, num_workers = 0)
-    # regressor = Unet1DEncoder(
-    #         dim = args.seq_length,
-    #         dim_mults = (1, 2, 4, 8),
-    #         channels = 1
-    #     ).to(device)
+
     if args.benchmark == "ppgbp":
         seq_length=262
     else:
@@ -71,7 +67,6 @@ def main(args):
     optimizer = optim.AdamW(regressor.parameters(), lr=args.init_lr, weight_decay=args.weight_decay)
     scheduler = CosineAnnealingLR(optimizer, T_max=args.T_max, eta_min=args.eta_min)
 
-    # 전체 validation set 크기만큼 val_t_all을 미리 샘플링
     total_val_size = len(val_dl.dataset)
     val_t_all, _ = schedule_sampler.sample(total_val_size, device)
 
@@ -166,15 +161,6 @@ def main(args):
                 group_avg_loss.backward()
             optimizer.step()
             scheduler.step()
-            # Best Train Loss Update
-            # if loss < best_train_loss:
-            #     print(f"best train loss updated: {loss:.4f}")
-            #     best_train_loss = loss
-                # torch.save({
-                #     'model_state_dict': regressor.state_dict(),
-                #     'optimizer_state_dict': optimizer.state_dict()
-                # }, model_path+".pt")
-            # Validation Step
             if (i + 1) % val_every == 0:
                 val_mae_sbp_lists={}; val_mae_dbp_lists={}; val_overall_mae_sbp_list=[]; val_overall_mae_dbp_list=[]
                 with torch.no_grad():
@@ -224,11 +210,7 @@ def main(args):
                                 wandb.run.summary[f"val_erm_best_group_{group}_mae_tot"] = val_sbp_group_losses[group] + val_dbp_group_losses[group]
                                 wandb.run.summary["best_val_epoch"] = i
                         best_val_train_loss = loss
-                        # torch.save({
-                        #     'model_state_dict': regressor.state_dict(),
-                        #     'optimizer_state_dict': optimizer.state_dict()
-                        # }, model_path+f"_{args.benchmark}_resnet_{args.loss}_erm.pt")
-                        
+
                     if gal_val_loss_sbp+gal_val_loss_dbp < best_gal_val_loss_sbp+best_gal_val_loss_dbp:
                         print(f"best gal val loss updated: sbp {gal_val_loss_sbp:.4f} dbp {gal_val_loss_dbp:.4f}")
                         best_gal_val_loss_sbp = gal_val_loss_sbp
@@ -254,17 +236,9 @@ def main(args):
                                 wandb.run.summary[f"val_worst_best_group_{group}_mae_sbp"] = val_sbp_group_losses[group]
                                 wandb.run.summary[f"val_worst_best_group_{group}_mae_dbp"] = val_dbp_group_losses[group]
                                 wandb.run.summary[f"val_worst_best_group_{group}_mae_tot"] = val_sbp_group_losses[group] + val_dbp_group_losses[group]
-                        # torch.save({
-                        #     'model_state_dict': regressor.state_dict(),
-                        #     'optimizer_state_dict': optimizer.state_dict()
-                        # }, model_path+f"_{args.benchmark}_resnet_{args.loss}_worst.pt")
-                    
+
             pbar.set_description(f'tr_loss: {loss:.4f} | tr_sbp_mae: {overall_mae_sbp:.4f} | tr_dbp_mae: {overall_mae_dbp:.4f} | val_sbp_mae: {val_loss_sbp:.4f} | val_dbp_mae: {val_loss_dbp:.4f} | t: {t_mean:.1f}')
             pbar.update(1)
-    # torch.save({
-    #     'model_state_dict': regressor.state_dict(),
-    #     'optimizer_state_dict': optimizer.state_dict()
-    # }, model_path+f"_{args.benchmark}_last_resnet_gal.pt")
     if not args.ignore_wandb:
         
         wandb.run.summary["best_train_loss"] = loss

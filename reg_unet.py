@@ -26,9 +26,6 @@ def main(args):
     batch_size = args.train_batch_size
     diffuse_time_step = args.diffusion_time_steps 
     epochs=args.train_epochs
-    if not args.ignore_wandb:
-        wandb.init(entity="ppg-diffusion" ,project="ppg_regressor", config=args)
-        wandb.run.name=f"{args.t_scheduling}_epoch_{epochs}_diffuse_{diffuse_time_step}_eta_{args.eta_min}_lr_{args.init_lr}"
     data = get_data(sampling_method='first_k',
                                     num_samples=5,
                                     data_root=paths.DATA_ROOT,
@@ -40,7 +37,7 @@ def main(args):
         args.t_scheduling, diffuse_time_step=diffuse_time_step,total_epochs=epochs, init_bias=args.init_bias, final_bias=args.final_bias
     ) 
     
-    model_path = f"/mlainas/ETRI_2023/reg_model/fold_{args.train_fold}/epoch_{epochs}_diffuse_{diffuse_time_step}_eta_{args.eta_min}_lr_{args.init_lr}"
+    model_path = f"your_path_here/reg_model/fold_{args.train_fold}/epoch_{epochs}_diffuse_{diffuse_time_step}_eta_{args.eta_min}_lr_{args.init_lr}"
 
     tr_dataset = Dataset1D(data['train']['ppg'], label=data['train']['spdp'], groups=data['train']['group_label'] ,normalize=True)
     val_dataset = Dataset1D(data['valid']['ppg'], label=data['valid']['spdp'], groups=data['valid']['group_label'] ,normalize=True)

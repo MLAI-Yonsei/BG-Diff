@@ -11,7 +11,6 @@ from prettytable import PrettyTable
 from sklearn.decomposition import PCA
 
 def main(args):
-    # 주어진 데이터에 대해 위의 함수를 사용하여 처리
     boundary = 3
     tar_group = 1
     n_components=10
@@ -21,7 +20,7 @@ def main(args):
                                     data_root=paths.DATA_ROOT,
                                     benchmark='bcg',
                                     train_fold=args.train_fold)
-    path=f'/mlainas/ETRI_2023/sampling_results/fold_0/seed_1000_sampling_method_first_k_num_samples_5-diffusion_time_steps_2000-train_num_steps_32_bcg_guided_train_lr_8e-05_reg_set_val_tr_group_average_loss_sel_erm/sample_group_average_loss_{tar_group}.pkl'
+    path=f'your_path/sampling_results/fold_0/seed_1000_sampling_method_first_k_num_samples_5-diffusion_time_steps_2000-train_num_steps_32_bcg_guided_train_lr_8e-05_reg_set_val_tr_group_average_loss_sel_erm/sample_group_average_loss_{tar_group}.pkl'
     with open(path, 'rb') as f:
         sample = pickle.load(f)
     gen_ppg = sample['sampled_seq']
@@ -75,9 +74,6 @@ def extract_pca_statistics(dataset, pca, boundary=2, group_labels=[0, 1, 2, 3], 
     return statistics
 
 def get_statistics(data, boundary=2):
-    """
-    주어진 데이터로 그룹별 평균과 분산을 계산합니다.
-    """
     mean = data.mean(dim=0)
     var = data.var(dim=0)
     lower_bound = mean - boundary * torch.sqrt(var)
@@ -85,9 +81,6 @@ def get_statistics(data, boundary=2):
     return mean, var, lower_bound, upper_bound
 
 def filter_dataset_based_on_statistics(dataset, statistics, pca=None, group_labels=[0, 1, 2, 3], is_pca=False, device='cuda'):
-    """
-    주어진 데이터셋을 주어진 통계치를 기준으로 필터링합니다.
-    """
     all_data = torch.cat([data for data, _, _ in dataset]).to(device)
     all_groups = torch.stack([g for _, _, g in dataset]).to(device)
 
@@ -109,17 +102,11 @@ def filter_dataset_based_on_statistics(dataset, statistics, pca=None, group_labe
     return filtered_data
 
 def filter_data(data, lower_bound, upper_bound):
-    """
-    주어진 데이터와 통계치로 필터링된 데이터를 반환합니다.
-    """
     is_within_bounds = (data >= lower_bound) & (data <= upper_bound)
     rows_to_keep = is_within_bounds.all(dim=1)
     return data[rows_to_keep]
 
 def get_grouped_data(data, groups, group_labels=[0, 1, 2, 3]):
-    """
-    주어진 데이터와 그룹 레이블로 그룹별 데이터를 반환합니다.
-    """
     if len(groups.shape) == 2:
         groups = same_to_group(groups)
     grouped_data = {}

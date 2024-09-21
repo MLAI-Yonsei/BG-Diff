@@ -1,5 +1,4 @@
 import time
-import wandb
 import argparse
 import pickle
 import torch
@@ -47,7 +46,6 @@ def generate_diffusion_sequence(args, data, dataset, device, diffusion, regresso
         sampled_seq_list.append(sampled_seq)
     
     try:
-        # torch.cat 호출 부분
         os.makedirs(sampling_dir, exist_ok=True)
         # with open(f'{sampling_dir}/sample_{target_group}.pkl', 'wb') as f:
         #     pickle.dump(torch.cat(sampled_seq_list, dim=0), f)
@@ -61,7 +59,6 @@ def generate_diffusion_sequence(args, data, dataset, device, diffusion, regresso
             pickle.dump(result, f)
             
     except RuntimeError as e:
-        # 문제가 발생했음을 알리는 파일 생성
         os.makedirs(sampling_dir, exist_ok=True)
         with open(f'{sampling_dir}/error_{target_group}.txt', 'w') as error_file:
             error_file.write(str(e))
@@ -100,10 +97,6 @@ def main(args):
     else:
         args.seq_length=625
     data_sampling_start = time.time()
-    # ppg, label = get_data(sampling_method=args.sampling_method,
-    #                              num_samples=args.num_samples,
-    #                              data_root=paths.DATA_ROOT,
-    #                              benchmark=args.benchmark)
     data = get_data(sampling_method='first_k',
                                     num_samples=5,
                                     data_root=paths.DATA_ROOT,
@@ -116,10 +109,7 @@ def main(args):
         wandb.log({'data_sampling_time': data_sampling_time})
     print(f"data sampling finished, collapsed time: {data_sampling_time:.5f}")
     os.makedirs(train_set_root, exist_ok=True)
-    
-    # with open(os.path.join(train_set_root, train_set_name), 'wb') as f:
-    #     pickle.dump(ppg, f)
-    
+        
     tr_dataset = dataset = Dataset1D(data['train']['ppg'], label=data['train']['spdp'], groups=data['train']['group_label'] ,normalize=True)
     val_dataset = Dataset1D(data['valid']['ppg'], label=data['valid']['spdp'], groups=data['valid']['group_label'] ,normalize=True)
 
@@ -144,7 +134,7 @@ def main(args):
     # resnet ------
     if not args.disable_guidance:
         model_path, args = get_reg_modelpath(args)
-        # model_path = f'/mlainas/ETRI_2023/reg_model/fold_{args.train_fold}/train-step_epoch_2000_diffuse_2000_wd_0.0001_eta_0.0_lr_0.0001_3_final_no_group_label_resnet_group_average_loss_erm.pt'
+        # model_path = f'your_root_path/reg_model/fold_{args.train_fold}/train-step_epoch_2000_diffuse_2000_wd_0.0001_eta_0.0_lr_0.0001_3_final_no_group_label_resnet_group_average_loss_erm.pt'
         # regressor = ResNet1D(output_size=2, final_layers=args.final_layers).to(device)
         regressor = ResNet1D(output_size=2, final_layers=args.final_layers, n_block=8, 
                              disable_g=True, is_se=args.is_se, auxilary_classification=args.auxilary_classification,
@@ -168,7 +158,8 @@ def main(args):
         results_folder = result_path
     )
     
-    if not args.sample_only and not os.path.exists(f'/mlainas/ETRI_2023/weights/fold_{args.train_fold}/seed_1000_sampling_method_first_k_num_samples_5-diffusion_time_steps_2000-train_num_steps_32_sensors/model-last.pt'):
+    # Trained Model Goes Here
+    if not args.sample_only and not os.path.exists(f'...{args.train_fold}.../model-last.pt'):
         trainer.train()
         trainer.save('last')
     else:
@@ -184,7 +175,7 @@ def main(args):
         else:
             generate_diffusion_sequence(args, data, dataset, device, diffusion, regressor_cond_fn, regressor, sampling_dir, args.target_group)
     else:
-        sampled_seq = diffusion.sample(batch_size = 16) #TODO: hard coding
+        sampled_seq = diffusion.sample(batch_size = 16) 
         os.makedirs(sampling_dir, exist_ok=True)
         with open(f'{sampling_dir}/sample_{target_group}.pkl', 'wb') as f:
             pickle.dump(sampled_seq, f)
