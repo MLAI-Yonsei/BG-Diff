@@ -19,24 +19,6 @@ Recent advancements in deep learning for predicting Arterial Blood Pressure (ABP
 Additionally, Our study proposes a post-processing technique to address the limitations of generative models in few-shot settings, consistently boosting performance across various methods such as training from scratch, transfer learning, and linear probing. When benchmarked, our methodology demonstrated performance improvements across all datasets, including BCG, PPGBP, and SENSORS. We confirmed data quality by comparing training, generated, and actual data. We analyzed error cases, morphology features, and t-SNE distribution to highlight the role of synthetic data in enhancing performance.
 
 
-## Model and Data Directory
-
-- Data
-
-    ```
-    ├── bp-algorithm
-    ├── datasets
-    │   ├── splits
-    │   │   ├── bcg_dataset
-    │   │   │   ├── feat_fold_0.csv
-    │   │   │   ├── feat_fold_1.csv
-    │   │   │   ├── feat_fold_2.csv
-    │   │   │   ├── feat_fold_3.csv
-    │   │   │   ├── feat_fold_4.csv
-
-    ```
-
-
 ## Explanation of the arguments and Example
 ### Key Arguments:
 
@@ -68,7 +50,7 @@ python main.py
 
 ```
 To evaluate generated PPG
-please use this [repository](https://github.com/inventec-ai-center/bp-benchmark).
+please utilize this [repository](https://github.com/inventec-ai-center/bp-benchmark).
 
 
 
