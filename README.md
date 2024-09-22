@@ -2,6 +2,17 @@
 
 This is the official pytorch implementation of the paper ["Few-Shot PPG Signal Generation via Guided Diffusion Models"](https://ieeexplore.ieee.org/document/10680298), Kang et al.
 
+If you make use of the code/experiment in your work, please cite our paper (Bibtex below).
+
+```
+@article{kang2024few,
+  title={Few-Shot PPG Signal Generation via Guided Diffusion Models},
+  author={Kang, Jinho and Lim, Yongtaek and Kim, KyuHyung and Lee, Hyeonjeong and Kim, KwangYong and Kim, Minseong and Jung, Jiyoung and Song, Kyungwoo},
+  journal={IEEE Sensors Journal},
+  year={2024},
+  publisher={IEEE}
+}
+```
 ## Quick Summary
 
 ![image](https://github.com/user-attachments/assets/a5f33682-04f3-4c07-a1b5-a2d593cd1914)
